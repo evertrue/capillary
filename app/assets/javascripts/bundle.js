@@ -7,9 +7,8 @@ var Overview = React.createClass({displayName: "Overview",
   render: function() {
     var topologies = [];
     this.props.topologies.forEach(function(topo) {
-      topologies.push(React.createElement(Topology, {key: topo.name, name: topo.name, root: topo.root, topic: topo.topic}));
+      topologies.push(React.createElement(Topology, {key: topo.root, name: topo.name, root: topo.root, topic: topo.topic}));
     });
-
     return (
       React.createElement("table", {className: "table table-striped"}, 
         React.createElement("thead", null, 
@@ -54,7 +53,7 @@ var Topology = React.createClass({displayName: "Topology",
       var storm = delta.storm;
       if ( storm === null ) {
         unhealthyPartitions++;
-        storm = 0;
+        storm = delta.current;
       } else {
         healthyPartitions++;
       }

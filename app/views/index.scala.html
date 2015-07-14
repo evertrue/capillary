@@ -9,7 +9,7 @@
   <script>
     var topologies = [];
     @for(topo <- topos) {
-      topologies.push({ name: "@topo.name", root: "@topo.spoutRoot", topic: "@topo.topic" });
+      topologies.push({ name: "@topo.name", root: "@topo.name/@topo.spoutRoot", topic: "@topo.topic" });
     }
     window.renderOverview(topologies, document.getElementById('container'));
   </script>

@@ -2,6 +2,13 @@ Capillary is a small web application that displays the state and
 deltas of Kafka-based storm topologies with a Kafka >= 0.8. It also provides
 an API for fetching this information for monitoring purposes.
 
+# Build & Deployment steps @ EverTrue
+
+```bash
+$ docker build -t registry.evertrue.com/evertrue/capillary:x.y.z .
+$ docker push registry.evertrue.com/evertrue/capillary:x.y.z
+```
+
 # Overview
 
 ![Capillary](/shot.png?raw=true)

@@ -1,7 +1,7 @@
 package controllers
 
 import com.codahale.metrics.json.MetricsModule
-import com.codahale.metrics.Gauge
+import com.codahale.metrics.{Gauge, Metric, MetricFilter}
 import com.fasterxml.jackson.databind.{ObjectMapper, ObjectWriter}
 import org.coursera.metrics.datadog.DatadogReporter
 import org.coursera.metrics.datadog.DatadogReporter.Expansion._
@@ -12,6 +12,7 @@ import java.util.EnumSet
 
 import models.Metrics
 import models.ZkKafka
+import org.coursera.metrics.datadog.TaggedName
 import org.coursera.metrics.datadog.TaggedName.TaggedNameBuilder
 import play.api.Play.current
 import play.api._
@@ -73,9 +74,12 @@ object Application extends Controller {
     val expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99)
     val httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build()
     val reporter = DatadogReporter.forRegistry(Metrics.metricRegistry)
-      // .withEC2Host()
+      .withEC2Host()
       .withTransport(httpTransport)
       .withExpansions(expansions)
+      .filter(new MetricFilter {
+        override def matches(name: String, metric: Metric): Boolean = !TaggedName.decode(name).getEncodedTags().isEmpty()
+      })
       .build()
 
     reporter.start(20, TimeUnit.SECONDS)

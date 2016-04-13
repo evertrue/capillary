@@ -1,19 +1,23 @@
 package controllers
 
 import com.codahale.metrics.json.MetricsModule
-import com.codahale.metrics.{MetricRegistry, SharedMetricRegistries}
-import com.fasterxml.jackson.databind.{ObjectWriter, ObjectMapper}
-import com.yammer.metrics.reporting.DatadogReporter
+import com.codahale.metrics.Gauge
+import com.fasterxml.jackson.databind.{ObjectMapper, ObjectWriter}
+import org.coursera.metrics.datadog.DatadogReporter
+import org.coursera.metrics.datadog.DatadogReporter.Expansion._
+import org.coursera.metrics.datadog.transport.HttpTransport
 import java.io.StringWriter
 import java.util.concurrent.TimeUnit
+import java.util.EnumSet
+
 import models.Metrics
 import models.ZkKafka
-import models.ZkKafka._
+import org.coursera.metrics.datadog.TaggedName.TaggedNameBuilder
 import play.api.Play.current
 import play.api._
 import play.api.mvc._
-import scala.language.implicitConversions
 
+import scala.language.implicitConversions
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 
@@ -31,12 +35,49 @@ object Application extends Controller {
   val module = new MetricsModule(rateUnit, durationUnit, showSamples)
   mapper.registerModule(module)
 
+  val topologies = ZkKafka.getTopologies
+
+  topologies.map({ t =>
+    val deltas = ZkKafka.getTopologyDeltas(t.name+"/"+t.spoutRoot, t.topic)._2
+    deltas.map({ d =>
+      val name = new TaggedNameBuilder().metricName("kafkaLag")
+        .addTag("app", "storm")
+        .addTag("topology", t.name)
+        .addTag("spout", t.spoutRoot)
+        .addTag("consumer", t.name+"/"+t.spoutRoot)
+        .addTag("object-type", t.name.split("-").head)
+        .addTag("topic", t.topic)
+        .addTag("partition", d.partition.toString)
+        .build()
+        .encode()
+
+      if (!Metrics.metricRegistry.getGauges.containsKey(name)) {
+        Metrics.metricRegistry.register(name, new Gauge[Long]() {
+          var topoRoot = s"${t.name}/${t.spoutRoot}"
+          var topic = s"${t.topic}"
+          var partition = d.partition
+
+          override def getValue: Long = {
+            ZkKafka.getTopologyDeltas(t.name + "/" + t.spoutRoot, t.topic)._2.filter({ p => p.partition == partition }).head.amount.get
+          }
+        })
+      }
+    })
+  })
+
+  println("apikey1: " + ddAPIKey)
+
   ddAPIKey.map({ apiKey =>
+    println("Starting Datadog Reporter")
     Logger.info("Starting Datadog Reporter")
-    val reporter = new DatadogReporter.Builder()
-      .withApiKey(apiKey)
-      // .withMetricNameFormatter(ShortenedNameFormatter)
+    val expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99)
+    val httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build()
+    val reporter = DatadogReporter.forRegistry(Metrics.metricRegistry)
+      // .withEC2Host()
+      .withTransport(httpTransport)
+      .withExpansions(expansions)
       .build()
+
     reporter.start(20, TimeUnit.SECONDS)
   })
 

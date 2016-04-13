@@ -14,4 +14,4 @@ EXPOSE 9000
 
 ENV JAVA_OPTS="-Xmx128M"
 
-CMD /capillary/capillary-1.2/bin/capillary -Dcapillary.zookeepers=${ZOOKEEPER} -Dcapillary.kafka.zkroot="/kafka" -Dcapillary.storm.zkroot="/storm-kafka"
+CMD /capillary/capillary-1.2/bin/capillary -Dcapillary.zookeepers=${ZOOKEEPER} -Dcapillary.kafka.zkroot="/kafka" -Dcapillary.storm.zkroot="/storm-kafka" ${DATADOG}

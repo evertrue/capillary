@@ -19,5 +19,7 @@ libraryDependencies ++= Seq(
   "com.codahale.metrics" % "metrics-jvm" % "3.0.1",
   "org.apache.curator" % "curator-framework" % "2.6.0",
   "org.apache.curator" % "curator-recipes" % "2.6.0",
-  "org.coursera" % "metrics-datadog" % "0.1.7"
+  "org.coursera" % "metrics-datadog" % "1.1.2"
 )
+
+mappings in Universal += file("stats-to-datadog.py") -> "stats-to-datadog.py"

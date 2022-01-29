@@ -29,6 +29,10 @@ Parameters:
         Description: specify the Zookeeper hosts with port as a comma delimited list
         Type: String
 
+    Datadog:
+        Description: specify the Datadog -Dcapillary.metrics.datadog.apiKey=xxx key
+        Type: String
+
     ServiceName:
         Description: specify ECS service name
         Type: String
@@ -100,6 +104,8 @@ Resources:
                       Value: !Ref EnvType
                     - Name: ZOOKEEPER
                       Value: !Ref ZookeeperHosts
+                    - Name: DATADOG
+                      Value: !Ref Datadog
                     - Name: JAVA_OPTS
                       Value: -Xmx512M
                   EntryPoint: !Ref AWS::NoValue

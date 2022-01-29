@@ -1,6 +1,0 @@
-FROM 478370645242.dkr.ecr.us-east-1.amazonaws.com/evertrue/et-capillary:latest
-
-# this is a work around for configuring DataDog
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-CMD /docker-entrypoint.sh

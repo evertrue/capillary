@@ -11,6 +11,10 @@ Parameters:
         Description: ECR repository name
         Type: String
 
+    ECRRepositoryDatadogName:
+        Description: ECR repository Datadog name
+        Type: String
+
     GitHubProjectName:
         Description: GitHub project name
         Type: String
@@ -22,6 +26,13 @@ Resources:
             TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/aws-cicd-cloudformation/master/crossacct-ecr-repository.yaml
             Parameters:
                 RepositoryName: !Ref ECRRepositoryName
+
+    ECRDatadog:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/aws-cicd-cloudformation/master/crossacct-ecr-repository.yaml
+            Parameters:
+                RepositoryName: !Ref ECRRepositoryDatadogName
 
     CodeBuild:
         Type: AWS::CloudFormation::Stack

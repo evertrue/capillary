@@ -1,0 +1,31 @@
+Description: >
+    Template for setting up ET Capillary
+Parameters:
+
+    TemplateBucket:
+        Description: The S3 bucket from which to fetch the templates used by this stack
+        Type: String
+        Default: cloudformation-proj-cross-account-artifactbucket-fc0c7ottwz7q
+
+    ECRRepositoryName:
+        Description: ECR repository name
+        Type: String
+
+    GitHubProjectName:
+        Description: GitHub project name
+        Type: String
+
+Resources:
+    ECR:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/aws-cicd-cloudformation/master/crossacct-ecr-repository.yaml
+            Parameters:
+                RepositoryName: !Ref ECRRepositoryName
+
+    CodeBuild:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/aws-cicd-cloudformation/master/codebuild.yaml
+            Parameters:
+                GitHubProjectName: !Ref GitHubProjectName

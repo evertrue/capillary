@@ -1,0 +1,28 @@
+version: 0.2
+
+env:
+  variables:
+    registry_id: "478370645242"
+    project_name: et-capillary
+    image_namespace: evertrue
+
+phases:
+  install:
+    runtime-versions:
+      ruby: 2.6
+    commands:
+      - echo Installing codebuild-extras...
+      - curl -fsSL https://raw.githubusercontent.com/evertrue/aws-codebuild-extras/master/install > extras.sh
+      - . ./extras.sh
+
+  pre_build:
+    commands:
+      - $(aws ecr get-login --no-include-email --registry-ids $registry_id)
+
+  build:
+    commands:
+      - docker build -f Dockerfile --build-arg GIT_COMMIT=${git_commit} -t ${image_namespace}/${project_name}:latest .
+
+  post_build:
+    commands:
+      - ./docker-push $registry_id $git_commit $image_namespace/${project_name}-task

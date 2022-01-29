@@ -1,0 +1,150 @@
+Description: >
+  Template for setting up the Kafka Manager as an ECS service
+Parameters:
+
+    TemplateBucket:
+        Description: The S3 bucket from which to fetch the templates used by this stack
+        Type: String
+        Default: cloudformation-proj-cross-account-artifactbucket-fc0c7ottwz7q
+
+    TemplateVersion:
+        Description: Template version
+        Type: String
+        Default: v0.1.1
+
+    EnvType:
+        Description: Environment type
+        Type: String
+        AllowedValues:
+            - stage
+            - prod
+        ConstraintDescription: must specify stage or prod.
+
+    Host:
+        Description: must specifies give server host name
+        Type: String
+        AllowedValues: [ 'capillary.evertrue.com', 'stage-capillary.evertrue.com' ]
+
+    ZookeeperHosts:
+        Description: specify the Zookeeper hosts with port as a comma delimited list
+        Type: String
+
+    ServiceName:
+        Description: specify ECS service name
+        Type: String
+        Default: capillary-api-service
+
+    DesiredCount:
+        Description: How many instances of this task should we run across our cluster?
+        Type: Number
+        Default: 1
+
+    RegistryId:
+        Description: ECR Registry Id
+        Type: String
+        Default: 478370645242
+
+    TaskDefinitionFamily:
+        Description: The task definition family
+        Type: String
+        Default: et-capillary
+
+    ImageTag:
+        Description: The docker image tag to use for the task definition
+        Type: String
+        Default: latest
+
+    ListenerRulePriority:
+        Description: The priority of the service on the Target Group Listener
+        Type: Number
+        Default: 200
+
+    ContainerPort:
+        Description: Container port Number
+        Type: Number
+        Default: 9000
+
+Resources:
+    Service: 
+        Type: AWS::ECS::Service
+        DependsOn: ListenerRule
+        Properties:
+            Cluster: !ImportValue api-ecs-cluster
+            Role: !ImportValue ecs-api-service-role
+            DesiredCount: !Ref DesiredCount
+            TaskDefinition: !Ref TaskDefinition
+            ServiceName: !Ref ServiceName
+            PlacementStrategies:
+                - Type: spread
+                  Field: attribute:ecs.availability-zone
+                - Type: spread
+                  Field: instanceId
+            HealthCheckGracePeriodSeconds: 300
+            LoadBalancers:
+                - ContainerName: web
+                  ContainerPort: !Ref ContainerPort
+                  TargetGroupArn: !Ref TargetGroup
+
+    TaskDefinition:
+        Type: AWS::ECS::TaskDefinition
+        Properties:
+            Family: !Ref TaskDefinitionFamily
+            TaskRoleArn: !ImportValue ecs-api-task-role
+            ContainerDefinitions:
+                - Name: web
+                  Essential: true
+                  Image: !Sub ${RegistryId}.dkr.ecr.us-east-1.amazonaws.com/evertrue/${TaskDefinitionFamily}:${ImageTag}
+                  Memory: 512
+                  Environment:
+                    - Name: APP_ENV
+                      Value: !Ref EnvType
+                    - Name: ZOOKEEPER
+                      Value: !Ref ZookeeperHosts
+                    - Name: JAVA_OPTS
+                      Value: -Xmx512M
+                  EntryPoint: !Ref AWS::NoValue
+                  PortMappings:
+                    - ContainerPort: 9000
+                  LogConfiguration:
+                    LogDriver: awslogs
+                    Options:
+                        awslogs-group: !Ref ServiceName
+                        awslogs-region: !Ref AWS::Region
+                        awslogs-stream-prefix: !Ref ServiceName
+    
+    CloudWatchLogsGroup:
+        Type: AWS::Logs::LogGroup
+        Properties:
+            LogGroupName: !Ref ServiceName
+            RetentionInDays: 90
+        DeletionPolicy: Retain
+
+    TargetGroup:
+        Type: AWS::ElasticLoadBalancingV2::TargetGroup
+        Properties:
+            VpcId: !ImportValue shared-VPC
+            Port: 80
+            Protocol: HTTP
+            Matcher: 
+                HttpCode: 200-299
+            HealthCheckIntervalSeconds: 60
+            HealthCheckPath: /
+            HealthCheckProtocol: HTTP
+            HealthCheckTimeoutSeconds: 5
+            HealthyThresholdCount: 2
+            TargetGroupAttributes:
+                - Key: deregistration_delay.timeout_seconds
+                  Value: 30
+    
+    ListenerRule:
+        Type: AWS::ElasticLoadBalancingV2::ListenerRule
+        Properties:
+            ListenerArn: !ImportValue shared-PrivLoadBalancerListener
+            Priority: !Ref ListenerRulePriority
+            Conditions:
+                - Field: host-header
+                  Values: 
+                    - !Ref Host
+            Actions:
+                - TargetGroupArn: !Ref TargetGroup
+                  Type: forward

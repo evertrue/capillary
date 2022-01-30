@@ -7,7 +7,7 @@ Host="capillary.evertrue.com"
 ZookeeperHosts="prod-zookeeper-1c.priv.evertrue.com:2181,prod-zookeeper-1d.priv.evertrue.com:2181,prod-zookeeper-1b.priv.evertrue.com:2181"
 AccountProfile="evertrue${EnvType}"
 StackName="ecs-cluster-${EnvType}-DevOpsServices-Capillary"
-Datadog="-Dcapillary.metrics.datadog.apiKey=cd20be2b109bd4eb7413f071afb01a8d"
+Datadog=""
 
 if [ "$EnvType" = "stage" ]; then
   Host="stage-capillary.evertrue.com"

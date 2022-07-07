@@ -13,6 +13,9 @@ if [ "$EnvType" = "stage" ]; then
   Host="stage-capillary.evertrue.com"
   ZookeeperHosts="stage-zookeeper-1c.priv.evertrue.com:2181,stage-zookeeper-1d.priv.evertrue.com:2181,stage-zookeeper-1b.priv.evertrue.com:2181"
   Datadog=""
+else
+  echo -n "Enter Datadog Api Key > "
+  read Datadog
 fi
 
 aws cloudformation deploy --stack-name $StackName --template-file ecs-service.yaml --parameter-overrides EnvType=$EnvType Host=$Host ZookeeperHosts=$ZookeeperHosts Datadog=$Datadog --profile $AccountProfile

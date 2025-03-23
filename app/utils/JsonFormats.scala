@@ -13,6 +13,15 @@ import play.api.libs.json._
 object JsonFormats {
 
   private def optionLongtoJsValue(maybeId: Option[Long]) = maybeId.map({ l => JsNumber(l) }).getOrElse(JsNull)
+  
+  // Add implicit Reads for Option[Long]
+  implicit val optionLongReads: Reads[Option[Long]] = new Reads[Option[Long]] {
+    def reads(json: JsValue): JsResult[Option[Long]] = json match {
+      case JsNumber(n) => JsSuccess(Some(n.toLong))
+      case JsNull => JsSuccess(None)
+      case _ => JsError("Expected JsNumber or JsNull")
+    }
+  }
 
   implicit object DeltaFormat extends Format[Delta] {
 

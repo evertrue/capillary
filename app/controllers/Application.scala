@@ -74,7 +74,7 @@ object Application extends Controller {
     val expansions = EnumSet.of(COUNT, RATE_1_MINUTE, RATE_15_MINUTE, MEDIAN, P95, P99)
     val httpTransport = new HttpTransport.Builder().withApiKey(apiKey).build()
     val reporter = DatadogReporter.forRegistry(Metrics.metricRegistry)
-      .withEC2Host()
+      .withHost(sys.env("DD_AGENT_HOST"))
       .withTransport(httpTransport)
       .withExpansions(expansions)
       .filter(new MetricFilter {

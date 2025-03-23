@@ -8,8 +8,6 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      ruby: 2.6
     commands:
       - echo Installing codebuild-extras...
       - curl -fsSL https://raw.githubusercontent.com/evertrue/aws-codebuild-extras/master/install > extras.sh

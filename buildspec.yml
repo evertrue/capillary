@@ -5,6 +5,7 @@ env:
     registry_id: "478370645242"
     project_name: et-capillary
     image_namespace: evertrue
+    region: us-east-1
 
 phases:
   install:

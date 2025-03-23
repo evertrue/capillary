@@ -24,4 +24,4 @@ phases:
 
   post_build:
     commands:
-      - ./docker-push $registry_id $git_commit $image_namespace/${project_name}-task
+      - ./docker-push $registry_id $git_commit $image_namespace/${project_name}

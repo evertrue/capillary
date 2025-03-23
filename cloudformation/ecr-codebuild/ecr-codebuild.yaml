@@ -40,3 +40,4 @@ Resources:
             TemplateURL: !Sub https://s3.amazonaws.com/${TemplateBucket}/aws-cicd-cloudformation/master/codebuild.yaml
             Parameters:
                 GitHubProjectName: !Ref GitHubProjectName
+                TimeoutInMinutes: 30
